@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Dashboard | Contract Management System{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+  <div class="bg-white rounded-2xl shadow-sm p-5 border border-slate-100">
+    <div class="text-sm text-slate-500 mb-1">Total Records</div>
+    <div class="text-3xl font-bold text-slate-800">{{ total_records }}</div>
+  </div>
+  <div class="bg-white rounded-2xl shadow-sm p-5 border border-slate-100">
+    <div class="text-sm text-slate-500 mb-1">Total Amount</div>
+    <div class="text-3xl font-bold text-emerald-600">₱{{ '%.2f'|format(total_amount) }}</div>
+  </div>
+  <div class="bg-white rounded-2xl shadow-sm p-5 border border-slate-100">
+    <div class="text-sm text-slate-500 mb-1">Records with Photo</div>
+    <div class="text-3xl font-bold text-indigo-600">{{ with_photo }}</div>
+  </div>
+</div>
+
+<div class="flex flex-wrap gap-3 mb-6">
+  <a href="{{ url_for('data_entry_page') }}" class="btn-primary">➕ New Data Entry</a>
+  <a href="{{ url_for('search_page') }}" class="btn-secondary">🔍 Search Records</a>
+  <a href="{{ url_for('export_excel') }}" class="btn-secondary">📤 Export to Excel</a>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+  <div class="px-5 py-4 border-b border-slate-100 font-semibold text-slate-700">Recent Records</div>
+  {% if recent|length == 0 %}
+    <div class="p-8 text-center text-slate-400">No records yet. Add your first entry from Data Entry.</div>
+  {% else %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-slate-500 text-left">
+        <tr>
+          <th class="px-5 py-3">Photo</th>
+          <th class="px-5 py-3">Contract ID</th>
+          <th class="px-5 py-3">Contract Name</th>
+          <th class="px-5 py-3">Total Amount</th>
+          <th class="px-5 py-3">Email</th>
+          <th class="px-5 py-3">Date</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for r in recent %}
+        <tr class="hover:bg-slate-50">
+          <td class="px-5 py-3">
+            {% if r['photo_filename'] %}
+              <img src="{{ url_for('static', filename='uploads/' ~ r['photo_filename']) }}" class="w-10 h-10 rounded-full object-cover border">
+            {% else %}
+              <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-400 text-xs">N/A</div>
+            {% endif %}
+          </td>
+          <td class="px-5 py-3 font-medium">{{ r['contract_id'] }}</td>
+          <td class="px-5 py-3">{{ r['contract_name'] }}</td>
+          <td class="px-5 py-3">₱{{ '%.2f'|format(r['total_amount']) }}</td>
+          <td class="px-5 py-3">{{ r['email'] }}</td>
+          <td class="px-5 py-3 text-slate-400">{{ r['created_at'] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

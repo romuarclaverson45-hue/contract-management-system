@@ -1,147 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const video = document.getElementById('webcam');
-  const canvas = document.getElementById('capture-canvas');
-  const photoPreview = document.getElementById('photo-preview');
-  const placeholder = document.getElementById('camera-placeholder');
+  const toggleBtn = document.getElementById('toggle-sidebar');
+  const sidebar = document.getElementById('sidebar');
 
-  const startBtn = document.getElementById('start-camera');
-  const takeBtn = document.getElementById('take-photo');
-  const retakeBtn = document.getElementById('retake-photo');
-  const uploadInput = document.getElementById('photo-upload');
-
-  const form = document.getElementById('entry-form');
-  const formMessage = document.getElementById('form-message');
-  const totalAmountInput = document.getElementById('total_amount');
-  const calcInputs = document.querySelectorAll('.calc');
-
-  let mediaStream = null;
-  let capturedBlob = null;   // Blob captured from webcam
-  let uploadedFile = null;   // File selected via upload input
-
-  // ---------------- Auto-calculate total amount ----------------
-  function recalcTotal() {
-    let sum = 0;
-    calcInputs.forEach(inp => {
-      const v = parseFloat(inp.value);
-      if (!isNaN(v)) sum += v;
+  if (toggleBtn && sidebar) {
+    toggleBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('collapsed');
     });
-    totalAmountInput.value = sum.toFixed(2);
   }
-  calcInputs.forEach(inp => inp.addEventListener('input', recalcTotal));
 
-  // ---------------- Webcam controls ----------------
-  startBtn.addEventListener('click', async () => {
-    try {
-      mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-      video.srcObject = mediaStream;
-      video.classList.remove('hidden');
-      photoPreview.classList.add('hidden');
-      placeholder.classList.add('hidden');
-      takeBtn.disabled = false;
-      startBtn.textContent = '🎥 Camera Active';
-      startBtn.disabled = true;
-    } catch (err) {
-      alert('Could not access the camera. Please check permissions or use the upload option instead.\n\n' + err.message);
-    }
-  });
-
-  takeBtn.addEventListener('click', () => {
-    if (!video.videoWidth) return;
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    canvas.toBlob((blob) => {
-      capturedBlob = blob;
-      uploadedFile = null; // captured photo takes precedence
-      uploadInput.value = '';
-      const url = URL.createObjectURL(blob);
-      photoPreview.src = url;
-      photoPreview.classList.remove('hidden');
-      video.classList.add('hidden');
-      retakeBtn.classList.remove('hidden');
-      takeBtn.classList.add('hidden');
-    }, 'image/jpeg', 0.92);
-  });
-
-  retakeBtn.addEventListener('click', () => {
-    capturedBlob = null;
-    photoPreview.classList.add('hidden');
-    video.classList.remove('hidden');
-    takeBtn.classList.remove('hidden');
-    retakeBtn.classList.add('hidden');
-  });
-
-  // ---------------- File upload alternative ----------------
-  uploadInput.addEventListener('change', () => {
-    if (uploadInput.files && uploadInput.files[0]) {
-      uploadedFile = uploadInput.files[0];
-      capturedBlob = null; // uploaded file takes precedence over stale capture
-      const url = URL.createObjectURL(uploadedFile);
-      photoPreview.src = url;
-      photoPreview.classList.remove('hidden');
-      video.classList.add('hidden');
-      placeholder.classList.add('hidden');
-      takeBtn.classList.add('hidden');
-      retakeBtn.classList.remove('hidden');
-    }
-  });
-
-  // ---------------- Stop camera stream on page leave ----------------
-  window.addEventListener('beforeunload', () => {
-    if (mediaStream) mediaStream.getTracks().forEach(t => t.stop());
-  });
-
-  // ---------------- Form submit ----------------
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const submitBtn = form.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    submitBtn.textContent = '⏳ Saving...';
-
-    const formData = new FormData(form);
-
-    if (capturedBlob) {
-      formData.append('photo', capturedBlob, 'capture.jpg');
-    } else if (uploadedFile) {
-      formData.append('photo', uploadedFile, uploadedFile.name);
-    }
-
-    try {
-      const res = await fetch('/api/contracts', { method: 'POST', body: formData });
-      const data = await res.json();
-
-      formMessage.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-emerald-100', 'text-emerald-700');
-      if (data.success) {
-        formMessage.classList.add('bg-emerald-100', 'text-emerald-700');
-        formMessage.textContent = '✅ ' + data.message;
-        form.reset();
-        capturedBlob = null;
-        uploadedFile = null;
-        photoPreview.classList.add('hidden');
-        placeholder.classList.remove('hidden');
-        video.classList.add('hidden');
-        retakeBtn.classList.add('hidden');
-        takeBtn.classList.remove('hidden');
-        takeBtn.disabled = true;
-        startBtn.disabled = false;
-        startBtn.textContent = '🎥 Start Camera';
-        if (mediaStream) {
-          mediaStream.getTracks().forEach(t => t.stop());
-          mediaStream = null;
-        }
-      } else {
-        formMessage.classList.add('bg-red-100', 'text-red-700');
-        formMessage.textContent = '⚠️ ' + data.message;
-      }
-    } catch (err) {
-      formMessage.classList.remove('hidden');
-      formMessage.classList.add('bg-red-100', 'text-red-700');
-      formMessage.textContent = '⚠️ Network error: ' + err.message;
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = '💾 Save Record';
-    }
-  });
+  // Auto-collapse sidebar on small screens
+  if (window.innerWidth < 768 && sidebar) {
+    sidebar.classList.add('collapsed');
+  }
 });
