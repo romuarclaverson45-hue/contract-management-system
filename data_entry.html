@@ -1,0 +1,15 @@
+document.addEventListener('DOMContentLoaded', () => {
+  const toggleBtn = document.getElementById('toggle-sidebar');
+  const sidebar = document.getElementById('sidebar');
+
+  if (toggleBtn && sidebar) {
+    toggleBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('collapsed');
+    });
+  }
+
+  // Auto-collapse sidebar on small screens
+  if (window.innerWidth < 768 && sidebar) {
+    sidebar.classList.add('collapsed');
+  }
+});
